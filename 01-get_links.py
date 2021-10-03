@@ -3,21 +3,8 @@ import argparse
 import requests
 from bs4 import BeautifulSoup
 
+import datetime
 
-
-
-def get_year(year, url):
-    """
-    :param year: Year to be searched from the archive
-    :param url: url to the main page of the historical archive
-    :return: url to the records for this 'year' -> 'str'
-    """
-    html = requests.get(url).text
-    soup = BeautifulSoup(html, 'lxml')
-    _hrefs = soup.find_all('a')
-    for href in _hrefs:
-        if href.text == str(year):
-            return 'https://arxiv.org' + href.get('href')
 
 def get_all(url_month):
     """
@@ -30,18 +17,20 @@ def get_all(url_month):
     url_all = url_month
 
     # GET TO THE FULL LIST FOR THAT YEAR-MONTH
-    for href in soup.find_all('a'):
+    for _href in soup.find_all('a'):
         # IF MULTIPLE PAGES THEN GET THE LIST OF 'all' PAPERS OTHERWISE KEEP THE ORIGINAL LINK
-        if href.text == 'all':
-            url_all = 'https://arxiv.org' + href.get('href')
+        if _href.text == 'all':
+            url_all = 'https://arxiv.org' + _href.get('href')
+            break
     return url_all
 
-def get_months (year, url):
+
+def get_months(year):
     """
-    :param year: year for which to search the records
-    :return: list of url's for the months of this year
+    :param year: year for which to search the records -> int
+    :return: list of url's for the months of this year -> list[str]
     """
-    year_url = get_year(year, url)
+    year_url = 'https://arxiv.org/year/astro-ph/'+str(year)[-2:]
     href_month = []
     html = requests.get(year_url).text
     soup = BeautifulSoup(html, 'lxml')
@@ -49,10 +38,11 @@ def get_months (year, url):
     lis = soup.find_all('li')
     for li in lis:
         _hrefs = li.find_all('a')
-        for href in _hrefs:
-            if str(year)[-2:] in href.text:
-                href_month.append(get_all('https://arxiv.org' + href.get('href')))
+        for _href in _hrefs:
+            if str(year)[-2:] in _href.text:
+                href_month.append(get_all('https://arxiv.org' + _href.get('href')))
     return href_month
+
 
 def get_papers(url_month):
     """
@@ -65,25 +55,21 @@ def get_papers(url_month):
     url_papers = []
     for dt in dts:
         url_papers.append('https://arxiv.org' + dt.find('a', {'title': 'Abstract'}).get('href'))
-    return (url_papers)
-
-
-
-
+    return url_papers
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--year', type=int)  # year for which to retrieve the info
     args = parser.parse_args()
-
     # GET THE LISTS OF LINKS TO ALL PAPERS FROM YEAR=year
-    url = 'https://arxiv.org/archive/astro-ph'
-
+    _start = datetime.datetime.now()
     href_papers = []
-
-    href_months = get_months(args.year, url)
+    href_months = get_months(args.year)
     for href in href_months:
         href_papers.extend(get_papers(href))
-    print (len(href_papers))
+    _end = datetime.datetime.now()
+    _diff = _end-_start
+    _start = _end
+    print(f'{args.year}\t{len(href_papers)}\t'
+          f'{datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
