@@ -11,4 +11,4 @@ Gets urls to all papers for a given year
 
 
 ## Usage 
-python 01-get_links.py --year year
+`$ python 01-get_links.py --year year`
