@@ -16,3 +16,6 @@ Get the yearly record
 
 Get recent entries
 `$ python 02-get_new_entries.py`
+
+Get information about papers from their url
+`$ python 03-get_data.py`
