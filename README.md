@@ -14,7 +14,7 @@ Gets urls to all papers for a given year
 Get the yearly record
 `$ python 01-get_links.py --year year`
 
-Get recent entries
+Get recent entries each day
 `$ python 02-get_new_entries.py`
 
 Get information about papers from their url
