@@ -3,6 +3,7 @@ import datetime
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+import logging
 
 
 class Article:
@@ -13,6 +14,7 @@ class Article:
         Given the arXiv url retrieve the paper summary from NASA ADS if available otherwise get it from arXiv
         """
         self.url = paper_url
+        print (self.url)
         self.__html = requests.get(self.url).text
         self.__soup = BeautifulSoup(self.__html, 'lxml')
 
@@ -26,10 +28,10 @@ class Article:
 
         self.get_date()
 
-        if self.is_ads():
-            self.get_summary_ads()
-        else:
-            self.get_summary_arxiv()
+        #if self.is_ads():
+        #    self.get_summary_ads()
+        #else:
+        self.get_summary_arxiv()
 
     def to_dict(self):
         my_dict = {'title': self.title,
@@ -92,17 +94,36 @@ class Article:
 
 if __name__ == '__main__':
     _start = datetime.datetime.now()
-    path = 'arxiv_astro-ph_all.dat'
+
+    # WORKING DIRECTORY
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    # GET THE urls FROM THE FILE
+    path = os.path.join(dir_path, 'arxiv_astro-ph_all.dat')
     if os.path.isfile(path):
         with open(path, 'r') as ifile:
             hrefs = ifile.read().splitlines()
 
+
+    # CREATE A LOG FILE
+    log_filename = os.path.join(dir_path, 'astro-ph_records_1992-now.log')
+    logging.basicConfig(level=logging.INFO, filename=log_filename,
+                        format="%(asctime)-15s %(levelname)-8s %(message)s")
+
+    # RETRIEVE INFORMATION FOR EACH PAPER
     papers = []
-    for href in hrefs[:3]:
+    for idx, href in enumerate(hrefs[:10000]):
         papers.append(Article(paper_url=href).to_dict())
+        if (idx%1000)==0:
+            logging.info(f'{idx}\t{datetime.datetime.now()}')
+
+    # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
-    df.to_csv('astro-ph_records_1992-now.csv')
+    filename = os.path.join(dir_path, 'astro-ph_records_1992-now.csv')
+    df.to_csv(filename)
+
     _end = datetime.datetime.now()
     _diff = _end-_start
     _start = _end
-    print(f'Time = {datetime.timedelta(seconds=_diff.seconds,microseconds=_diff.microseconds)} sec')
+
+    logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds,microseconds=_diff.microseconds)} sec')
