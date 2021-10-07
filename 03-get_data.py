@@ -1,11 +1,13 @@
 import os
 import datetime
 import requests
+import pandas as pd
 from bs4 import BeautifulSoup
 
 
 class Article:
-    def __init__(self, paper_url=None):
+    def __init__(self, title=None, date=None, authors=None, abstract=None,
+                 keywords=None, citations=None, references=None, paper_url=None):
         """
         :param paper_url: arXiv url to the paper -> str
         Given the arXiv url retrieve the paper summary from NASA ADS if available otherwise get it from arXiv
@@ -14,13 +16,13 @@ class Article:
         self.__html = requests.get(self.url).text
         self.__soup = BeautifulSoup(self.__html, 'lxml')
 
-        self.date = None
-        self.title = None
-        self.authors = None
-        self.abstract = None
-        self.keywords = None
-        self.citations = 0
-        self.references = 0
+        self.title = title
+        self.date = date
+        self.authors = authors
+        self.abstract = abstract
+        self.keywords = keywords
+        self.citations = citations
+        self.references = references
 
         self.get_date()
 
@@ -28,6 +30,16 @@ class Article:
             self.get_summary_ads()
         else:
             self.get_summary_arxiv()
+
+    def to_dict(self):
+        my_dict = {'title': self.title,
+                   'date': self.date,
+                   'authors': self.authors,
+                   'abstract': self.abstract,
+                   'keywords': self.keywords,
+                   'citations': self.citations,
+                   'references': self.references}
+        return my_dict
 
     def get_date(self):
         """
@@ -86,9 +98,10 @@ if __name__ == '__main__':
             hrefs = ifile.read().splitlines()
 
     papers = []
-    for href in hrefs[:10]:
-        papers.append(Article(href))
-
+    for href in hrefs[:3]:
+        papers.append(Article(paper_url=href).to_dict())
+    df = pd.DataFrame.from_records(papers)
+    df.to_csv('test.csv')
     _end = datetime.datetime.now()
     _diff = _end-_start
     _start = _end
