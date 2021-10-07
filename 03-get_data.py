@@ -101,7 +101,7 @@ if __name__ == '__main__':
     for href in hrefs[:3]:
         papers.append(Article(paper_url=href).to_dict())
     df = pd.DataFrame.from_records(papers)
-    df.to_csv('test.csv')
+    df.to_csv('astro-ph_records_1992-now.csv')
     _end = datetime.datetime.now()
     _diff = _end-_start
     _start = _end
