@@ -4,7 +4,7 @@ from web_scraping_fn import *
 
 
 # url TO THE MAIN PAGE OF NEW PAPERS
-url = 'https://arxiv.org/list/astro-ph/recent'
+url = 'https://export.arxiv.org/list/astro-ph/recent'
 
 # EXTEND THE PAGE TO ALL RECENT PAPERS
 url = get_all(url)

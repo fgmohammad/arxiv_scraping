@@ -52,7 +52,7 @@ def get_papers(url_month, href_stored):
     url_papers = []
     for dt in dts:
         if not isinstance(dt.find('a', {'title': 'Abstract'}), type(None)):
-            _url = 'https://arxiv.org' + dt.find('a', {'title': 'Abstract'}).get('href')
+            _url = 'https://export.arxiv.org' + dt.find('a', {'title': 'Abstract'}).get('href')
             if _url not in href_stored:
                 url_papers.append(_url)
     return url_papers
