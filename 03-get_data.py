@@ -46,8 +46,8 @@ class Article:
         """
         :return: None -> Fill-in the self.date from arXiv
         """
-        __date = self.__soup.find('div', class_='dateline').text.split(',')[0].lstrip('(Submitted on ').rstrip('(v1)').\
-            rstrip()
+        __date = self.__soup.find('div', class_='dateline').text.split(',')[0].lstrip('(Submitted on ')\
+            .rstrip('(v1)').rstrip()
         self.date = datetime.datetime.strptime(__date, "%d %b %Y").date()
 
     def is_ads(self):
@@ -114,8 +114,9 @@ if __name__ == '__main__':
     for idx, href in enumerate(hrefs[:12000]):
         try:
             papers.append(Article(paper_url=href).to_dict())
-        except:
-            logging.error(f'{idx}->{href} raised and error!!!')
+        except Exception:
+            logging.error(f'{idx}->{href} raised an error!!!')
+            continue
         if (idx % 1000) == 0:
             logging.info(f'{idx}\t{datetime.datetime.now()}')
 
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     df.to_csv(path_or_buf=filename)
 
     _end = datetime.datetime.now()
-    _diff = _end-_start
+    _diff = _end - _start
     _start = _end
 
-    logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds,microseconds=_diff.microseconds)} sec')
+    logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
