@@ -27,9 +27,9 @@ class Article:
 
         self.get_date()
 
-        #if self.is_ads():
+        # if self.is_ads():
         #    self.get_summary_ads()
-        #else:
+        # else:
         self.get_summary_arxiv()
 
     def to_dict(self):
@@ -46,7 +46,8 @@ class Article:
         """
         :return: None -> Fill-in the self.date from arXiv
         """
-        __date = self.__soup.find('div', class_='dateline').text.split(',')[0].lstrip('(Submitted on ').rstrip('(v1)').rstrip()
+        __date = self.__soup.find('div', class_='dateline').text.split(',')[0].lstrip('(Submitted on ').rstrip('(v1)').\
+            rstrip()
         self.date = datetime.datetime.strptime(__date, "%d %b %Y").date()
 
     def is_ads(self):
@@ -67,7 +68,6 @@ class Article:
         self.abstract = __content.find('blockquote', class_='abstract mathjax').text.lstrip('\nAbstract: ')
         __summary = __content.find('table', {'summary': 'Additional metadata'})
         self.keywords = __summary.find('td', class_='tablecell subjects').text.lstrip('\n').split(';')
-
 
     def get_summary_ads(self):
         """
@@ -104,7 +104,6 @@ if __name__ == '__main__':
         with open(path, 'r') as ifile:
             hrefs = ifile.read().splitlines()
 
-
     # CREATE A LOG FILE
     log_filename = os.path.join(dir_path, 'astro-ph_records_1992-now.log')
     logging.basicConfig(level=logging.INFO, filename=log_filename,
@@ -112,16 +111,18 @@ if __name__ == '__main__':
 
     # RETRIEVE INFORMATION FOR EACH PAPER
     papers = []
-    for idx, href in enumerate(hrefs):
-        papers.append(Article(paper_url=href).to_dict())
-        if (idx%1000)==0:
+    for idx, href in enumerate(hrefs[:12000]):
+        try:
+            papers.append(Article(paper_url=href).to_dict())
+        except:
+            logging.error(f'{idx}->{href} raised and error!!!')
+        if (idx % 1000) == 0:
             logging.info(f'{idx}\t{datetime.datetime.now()}')
 
-    print (papers[0]['title'])
     # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
     filename = os.path.join(dir_path, 'astro-ph_records_1992-now.csv')
-    df.to_csv(filename)
+    df.to_csv(path_or_buf=filename)
 
     _end = datetime.datetime.now()
     _diff = _end-_start
