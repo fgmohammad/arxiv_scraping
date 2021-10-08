@@ -112,9 +112,9 @@ if __name__ == '__main__':
 
     # RETRIEVE INFORMATION FOR EACH PAPER
     papers = []
-    for idx, href in enumerate(hrefs[:5000]):
+    for idx, href in enumerate(hrefs):
         papers.append(Article(paper_url=href).to_dict())
-        if (idx%100)==0:
+        if (idx%1000)==0:
             logging.info(f'{idx}\t{datetime.datetime.now()}')
 
     print (papers[0]['title'])
