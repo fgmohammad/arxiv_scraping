@@ -1,4 +1,6 @@
 import os
+import time
+import argparse
 import datetime
 import requests
 import pandas as pd
@@ -26,7 +28,6 @@ class Article:
         self.references = references
 
         self.get_date()
-
 
         # if self.is_ads():
         #    self.get_summary_ads()
@@ -56,7 +57,6 @@ class Article:
         :return: True if ADS url available, False if not -> bool
         """
         __ads_url = self.__soup.find('a', string='NASA ADS').get('href')
-        print (f'Questo -> {__ads_url}')
         return not isinstance(__ads_url, type(None))
 
     def get_summary_arxiv(self):
@@ -76,26 +76,30 @@ class Article:
         :return: None -> Get the paper summary from NASA ADS
         """
         __ads_url = self.__soup.find('a', class_='abs-button abs-button-small cite-ads').get('href')
-        print (f'ADS -> {__ads_url}')
-        # __html = requests.get(__ads_url).text
-        # __soup = BeautifulSoup(__html, 'lxml')
-        # self.title = ' '.join(__soup.find('h2', class_='s-abstract-title').text.split())
-        # __authors = __soup.find_all('li', class_='author')
-        # self.authors = []
-        # for author in __authors:
-        #     self.authors.append(author.text.rstrip('\n'))
-        # self.abstract = ' '.join(__soup.find('div', class_='s-abstract-text').text.lstrip('\nAbstract').split())
-        # self.keywords = __soup.find('dt', text='Keywords:').find_next('dd').text.strip().split('\n')
-        # self.keywords = [_keyword.rstrip(';') for _keyword in self.keywords]
-        # self.citations = __soup.find('a', {'data-widget-id': 'ShowCitations'})
-        # if not isinstance(self.citations, type(None)):
-        #     self.citations = int(self.citations.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
-        # self.references = __soup.find('a', {'data-widget-id': 'ShowReferences'})
-        # if not isinstance(self.references, type(None)):
-        #     self.references = int(self.references.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
+        __html = requests.get(__ads_url).text
+        __soup = BeautifulSoup(__html, 'lxml')
+        self.title = ' '.join(__soup.find('h2', class_='s-abstract-title').text.split())
+        __authors = __soup.find_all('li', class_='author')
+        self.authors = []
+        for author in __authors:
+            self.authors.append(author.text.rstrip('\n'))
+        self.abstract = ' '.join(__soup.find('div', class_='s-abstract-text').text.lstrip('\nAbstract').split())
+        self.keywords = __soup.find('dt', text='Keywords:').find_next('dd').text.strip().split('\n')
+        self.keywords = [_keyword.rstrip(';') for _keyword in self.keywords]
+        self.citations = __soup.find('a', {'data-widget-id': 'ShowCitations'})
+        if not isinstance(self.citations, type(None)):
+            self.citations = int(self.citations.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
+        self.references = __soup.find('a', {'data-widget-id': 'ShowReferences'})
+        if not isinstance(self.references, type(None)):
+            self.references = int(self.references.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--n_init', type=int, default=0, help='Starting point')
+    parser.add_argument('--n_fin', type=int, default=10000, help='End point')
+    args = parser.parse_args()
+
     _start = datetime.datetime.now()
 
     # WORKING DIRECTORY
@@ -107,31 +111,36 @@ if __name__ == '__main__':
         with open(path, 'r') as ifile:
             hrefs = ifile.read().splitlines()
 
+    # LIMIT TO THE SPECIFIED BATCH IN argparse
+    if args.n_fin>len(hrefs):
+        hrefs = hrefs[args.n_init:]
+    else:
+        hrefs = hrefs[args.n_init:args.n_fin]
+
     # CREATE A LOG FILE
-    log_filename = os.path.join(dir_path, 'astro-ph_records_1992-now.log')
+    log_filename = os.path.join(dir_path, f'astro-ph_records_1992-now_{args.n_init}-{args.n_fin}.log')
     logging.basicConfig(level=logging.INFO, filename=log_filename,
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
     # RETRIEVE INFORMATION FOR EACH PAPER
     papers = []
     for idx, href in enumerate(hrefs[:10000]):
-        print (href)
         try:
             papers.append(Article(paper_url=href).to_dict())
-        except Exception:
-            logging.error(f'{idx}->{href} raised an error!!!')
-            continue
+        except Exception as e:
+            logging.error(f'{idx}->{href} raised the error:\t{e}!!!')
         if (idx % 1000) == 0:
             logging.info(f'{idx}\t{datetime.datetime.now()}')
-
+        if (idx % 2500) == 0:
+            time.sleep(5)
 
     # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
-    filename = os.path.join(dir_path, 'astro-ph_records_1992-now.csv')
+    filename = os.path.join(dir_path, f'astro-ph_records_1992-now_{args.n_init}-{args.n_fin}.csv')
     df.to_csv(path_or_buf=filename)
 
     _end = datetime.datetime.now()
     _diff = _end - _start
     _start = _end
 
-    # logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
+    logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
