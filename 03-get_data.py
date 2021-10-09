@@ -136,8 +136,11 @@ if __name__ == '__main__':
 
     # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
-    filename = os.path.join(dir_path, f'astro-ph_records_1992-now_{args.n_init}-{args.n_fin}.csv')
-    df.to_csv(path_or_buf=filename)
+    filename = os.path.join(dir_path, f'astro-ph_records_1992-now.csv')
+    if os.path.isfile(filename):
+        df.to_csv(path_or_buf=filename, header=False, mode='a')
+    else:
+        df.to_csv(path_or_buf=filename)
 
     _end = datetime.datetime.now()
     _diff = _end - _start
