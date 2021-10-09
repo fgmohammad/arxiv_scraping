@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import argparse
 import datetime
@@ -48,8 +49,8 @@ class Article:
         """
         :return: None -> Fill-in the self.date from arXiv
         """
-        __date = self.__soup.find('div', class_='dateline').text.split(',')[0].lstrip('(Submitted on ')\
-            .rstrip('(v1)').rstrip()
+        __date = self.__soup.find('div', class_='dateline').text
+        __date = str(re.findall('(\d{1,} \S{3} \d{4})+', __date)[0])
         self.date = datetime.datetime.strptime(__date, "%d %b %Y").date()
 
     def is_ads(self):
