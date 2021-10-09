@@ -11,8 +11,8 @@ Gets urls to all papers for a given year
 
 
 ## Usage 
-<li>Get the all papers in the year=year (yyyy format)
+Get the all papers in the year=year (yyyy format)
 `$ python get_records_by_year.py --year year`
 
-<li>Get recent entries each day (recommended: schedule to run once a day, using e.g. crontab)
+Get recent entries each day (recommended: schedule to run once a day, using e.g. crontab)
 `$ python get_recent_entries.py`
