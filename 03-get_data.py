@@ -14,8 +14,8 @@ class Article:
         Given the arXiv url retrieve the paper summary from NASA ADS if available otherwise get it from arXiv
         """
         self.url = paper_url
-        self.__html = requests.get(self.url).text
-        self.__soup = BeautifulSoup(self.__html, 'lxml')
+        self.__html = requests.get(self.url)
+        self.__soup = BeautifulSoup(self.__html.content, 'lxml')
 
         self.title = title
         self.date = date
@@ -26,6 +26,7 @@ class Article:
         self.references = references
 
         self.get_date()
+
 
         # if self.is_ads():
         #    self.get_summary_ads()
@@ -54,7 +55,8 @@ class Article:
         """
         :return: True if ADS url available, False if not -> bool
         """
-        __ads_url = self.__soup.find('a', class_='abs-button abs-button-small cite-ads').get('href')
+        __ads_url = self.__soup.find('a', string='NASA ADS').get('href')
+        print (f'Questo -> {__ads_url}')
         return not isinstance(__ads_url, type(None))
 
     def get_summary_arxiv(self):
@@ -74,22 +76,23 @@ class Article:
         :return: None -> Get the paper summary from NASA ADS
         """
         __ads_url = self.__soup.find('a', class_='abs-button abs-button-small cite-ads').get('href')
-        __html = requests.get(__ads_url).text
-        __soup = BeautifulSoup(__html, 'lxml')
-        self.title = ' '.join(__soup.find('h2', class_='s-abstract-title').text.split())
-        __authors = __soup.find_all('li', class_='author')
-        self.authors = []
-        for author in __authors:
-            self.authors.append(author.text.rstrip('\n'))
-        self.abstract = ' '.join(__soup.find('div', class_='s-abstract-text').text.lstrip('\nAbstract').split())
-        self.keywords = __soup.find('dt', text='Keywords:').find_next('dd').text.strip().split('\n')
-        self.keywords = [_keyword.rstrip(';') for _keyword in self.keywords]
-        self.citations = __soup.find('a', {'data-widget-id': 'ShowCitations'})
-        if not isinstance(self.citations, type(None)):
-            self.citations = int(self.citations.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
-        self.references = __soup.find('a', {'data-widget-id': 'ShowReferences'})
-        if not isinstance(self.references, type(None)):
-            self.references = int(self.references.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
+        print (f'ADS -> {__ads_url}')
+        # __html = requests.get(__ads_url).text
+        # __soup = BeautifulSoup(__html, 'lxml')
+        # self.title = ' '.join(__soup.find('h2', class_='s-abstract-title').text.split())
+        # __authors = __soup.find_all('li', class_='author')
+        # self.authors = []
+        # for author in __authors:
+        #     self.authors.append(author.text.rstrip('\n'))
+        # self.abstract = ' '.join(__soup.find('div', class_='s-abstract-text').text.lstrip('\nAbstract').split())
+        # self.keywords = __soup.find('dt', text='Keywords:').find_next('dd').text.strip().split('\n')
+        # self.keywords = [_keyword.rstrip(';') for _keyword in self.keywords]
+        # self.citations = __soup.find('a', {'data-widget-id': 'ShowCitations'})
+        # if not isinstance(self.citations, type(None)):
+        #     self.citations = int(self.citations.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
+        # self.references = __soup.find('a', {'data-widget-id': 'ShowReferences'})
+        # if not isinstance(self.references, type(None)):
+        #     self.references = int(self.references.find('span', class_='num-items').text.lstrip('(').rstrip(')'))
 
 
 if __name__ == '__main__':
@@ -111,7 +114,8 @@ if __name__ == '__main__':
 
     # RETRIEVE INFORMATION FOR EACH PAPER
     papers = []
-    for idx, href in enumerate(hrefs[:12000]):
+    for idx, href in enumerate(hrefs[:10000]):
+        print (href)
         try:
             papers.append(Article(paper_url=href).to_dict())
         except Exception:
@@ -119,6 +123,7 @@ if __name__ == '__main__':
             continue
         if (idx % 1000) == 0:
             logging.info(f'{idx}\t{datetime.datetime.now()}')
+
 
     # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
@@ -129,4 +134,4 @@ if __name__ == '__main__':
     _diff = _end - _start
     _start = _end
 
-    logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
+    # logging.info(f'Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
