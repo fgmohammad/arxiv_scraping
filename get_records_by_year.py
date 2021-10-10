@@ -35,7 +35,7 @@ if __name__ == '__main__':
     if os.path.isfile(path_stored):
         with open(path_stored, 'r') as ifile:
             papers_stored = ifile.read().splitlines()
-
+    logging.info(f'N stored: {len(papers_stored)}')
 
 
     # LOOP OVER EACH MONTH TO GET urls OF ALL PAPERS IN THAT MONTH AND GET INFO FOR EACH PAPER
@@ -44,16 +44,16 @@ if __name__ == '__main__':
     for month, url_month in enumerate(url_months):
         url_papers = get_papers(url_month)
         for url_paper in url_papers:
-            if url_paper in papers_stored:
-                # IF PAPER IS ALREADY STORED -> continue TO THE NEXT PAPER
-                continue
-            else:
-                # OTHERWISE STORE THE INFO AND ADD THE url TO THE LIST OF STORED PAPERS
+            if url_paper not in papers_stored:
+                # IF PAPER NOT STORED THEN STORE THE INFO AND ADD THE url TO THE LIST OF NEW PAPERS
                 try:
                     papers.append(Article(url_paper=url_paper).to_dict())
                     papers_new.append(url_paper)
                 except Exception as e:
                     logging.error(f'{url_paper} raised the error:\t{e}!!!')
+            else:
+                # IF PAPER IS ALREADY STORED -> continue TO THE NEXT PAPER
+                continue
         _diff = datetime.datetime.now() - _start
         _start = datetime.datetime.now()
         logging.info(f'month: {month+1:02d}, url_month: {url_month}, n_papers: {len(url_papers)},'
