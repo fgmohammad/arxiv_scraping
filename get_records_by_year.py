@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
     # LOOP OVER EACH MONTH TO GET urls OF ALL PAPERS IN THAT MONTH AND GET INFO FOR EACH PAPER
     papers = []
+    papers_new = []
     for month, url_month in enumerate(url_months):
         url_papers = get_papers(url_month)
         for url_paper in url_papers:
@@ -50,7 +51,7 @@ if __name__ == '__main__':
                 # OTHERWISE STORE THE INFO AND ADD THE url TO THE LIST OF STORED PAPERS
                 try:
                     papers.append(Article(url_paper=url_paper).to_dict())
-                    papers_stored.append(url_paper)
+                    papers_new.append(url_paper)
                 except Exception as e:
                     logging.error(f'{url_paper} raised the error:\t{e}!!!')
         _diff = datetime.datetime.now() - _start
@@ -59,17 +60,17 @@ if __name__ == '__main__':
                      f' Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
 
     # WRITE THE UPDATED LIST OF STORED PAPERS TO THE FILE
-    with open(path_stored, 'w') as ofile:
-        for url_paper in papers_stored:
+    with open(path_stored, 'a') as ofile:
+        for url_paper in papers_new:
             ofile.write(f'{url_paper}\n')
 
     # CREATE A PANDAS DATAFRAME AND WRITE THE RESULT TO A .csv FILE
     df = pd.DataFrame.from_records(papers)
     filename = os.path.join(dir_path, f'astro-ph_records_1992-now.csv')
     if os.path.isfile(filename):
-        df.to_csv(path_or_buf=filename, header=False, mode='a')
+        df.to_csv(path_or_buf=filename, header=False, mode='a', index=False)
     else:
-        df.to_csv(path_or_buf=filename)
+        df.to_csv(path_or_buf=filename, index=False)
     _diff = datetime.datetime.now() - _start
     _start = datetime.datetime.now()
     logging.info(f'csv Stored. Time = {datetime.timedelta(seconds=_diff.seconds, microseconds=_diff.microseconds)} sec')
