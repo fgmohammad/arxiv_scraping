@@ -34,16 +34,17 @@ if __name__ == '__main__':
     papers = []
     url_papers = get_papers(url_recent)
     for url_paper in url_papers:
-        if url_paper in papers_stored:
-            # IF PAPER IS ALREADY STORED -> continue TO THE NEXT PAPER
-            continue
-        else:
-            # OTHERWISE STORE THE INFO AND ADD THE url TO THE LIST OF STORED PAPERS
+        if url_paper not in papers_stored:
+            # IF PAPER NOT STORED -> GET THE INFO AND ADD THE url TO THE LIST OF STORED PAPERS
             try:
                 papers.append(Article(url_paper=url_paper).to_dict())
                 papers_stored.append(url_paper)
             except Exception as e:
                 logging.error(f'{url_paper} raised the error:\t{e}!!!')
+        else:
+            # IF PAPER IS ALREADY STORED -> continue TO THE NEXT PAPER
+            continue
+
     _diff = datetime.datetime.now() - _start
     _start = datetime.datetime.now()
     logging.info(f'Date: {datetime.datetime.today().strftime("%d %b %Y")}, url_month: {url_recent},'
